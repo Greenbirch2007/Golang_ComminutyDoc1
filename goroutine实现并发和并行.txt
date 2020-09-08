@@ -68,3 +68,257 @@ main()函数就是主线程
 想让协程执行完毕后执行主进程退出，这是还是用sync.WaitGroup等待协程执行完毕
 
 syc.WaitGroup可以实现主线程等待协程执行完毕
+
+
+package main
+
+import (
+	"fmt"
+	"time"
+	"sync"
+)
+
+var wg sync.WaitGroup
+
+func test() {
+	for i := 0; i < 10; i++ {
+		fmt.Println("你好 golang", i)
+		time.Sleep(time.Millisecond * 100)
+	}
+	wg.Done() //协程计数器减一
+
+}
+
+func main() {
+	wg.Add(1)//协程计数器加一
+
+	go test() //开启一个协程(就是用户级别的方法)
+	for i := 0; i < 10; i++ {
+		fmt.Println("hello golang", i)
+		time.Sleep(time.Millisecond * 50)
+	}
+	wg.Wait()
+	fmt.Println("主线程退出")
+
+}
+
+
+设置golang并行运行的时候用在哪用的cpu 数量
+
+go运行时的调度器使用GOMAXPROCS参数来确定需要使用多少个
+OS线程来同时执行go代码。
+默认只是机器上的CPU核心数。
+例如在一个8核心的机器上，调度器会把go代码同时调度到8个os现场上
+
+go语言中可以通过runtime.GOMAXPROCS()函数设置当前程序并发时占用的
+CPU逻辑核心数
+
+golang1.5版本之前，默认使用的是单核心执行
+1.5版本之后，默认使用全部的CPU逻辑核心数
+
+
+package main
+
+import (
+	"fmt"
+	"runtime"
+
+)
+
+func main()  {
+	//获取当前计算机上的cpu得数
+	cpuNUM :=runtime.NumCPU()
+	fmt.Println(cpuNUM)
+	runtime.GOMAXPROCS(cpuNUM-1)
+	fmt.Println("OK")
+}
+
+
+package main
+
+import (
+	"fmt"
+	
+	"sync"
+)
+var wg sync.WaitGroup
+
+func hello(i int){
+	defer wg.Done()// goroutine结束就登记-1
+	fmt.Println("hello goroutine",i)
+}
+func main()  {
+
+
+	for i:=0;i<10 ;i++  {
+		wg.Add(1) //启动一个goroutine就是登记1
+		go hello(i)
+	}
+	wg.Wait() //等待所有登记的goroutine都结束
+}
+
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+var wg sync.WaitGroup
+func test(num int){
+	defer wg.Done()
+	for i:=0;i<5;i++  {
+		fmt.Printf("协程(%v)打印的第(%v)条数据 \n",num,i)
+		time.Sleep(time.Millisecond*100)
+	}
+}
+
+func main(){
+	for i:=0;i<6;i++{
+		wg.Add(1)
+		go test(i)
+	}
+	wg.Wait()
+	fmt.Println("close main process")
+}
+
+10000个素数的计算方法(3种)
+
+1. 传统方法，通过一个for循环判断各个数是不是素数
+2. 使用并发或并行的方式，将统计素数的任务分配给多个
+goroutine去完成，这是就用到了goroutine
+2. goroutine结合channel
+
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
+//开启4个协程时
+
+
+func main(){
+	start := time.Now().Unix()
+	for num:=2;num<100000 ;num++  {
+		var flag=true
+		for i:=2;i<num ;i++{
+			if num%i ==0{
+				flag = false
+				break
+			}
+		}
+		if flag{
+
+		}
+	}
+	end := time.Now().Unix()
+	fmt.Println(end-start)//8
+}
+
+package main
+
+import (
+
+	"fmt"
+	"sync"
+	"time"
+)
+//开启4个协程时
+// start:(n-1)*30000+1  end:n*30000
+
+var wg sync.WaitGroup
+
+func test(n int){
+	for num:=(n-1)*30000+1;num< n*30000;num++  {
+		var flag = true
+		for i:=2;i<num ;i++  {
+			if num%i==0{
+				flag=false
+				break
+			}
+		}
+		if flag{}
+	}
+	wg.Done()
+}
+
+func main(){
+	start := time.Now().Unix()
+	for i:=1;i<4 ;i++  {
+		wg.Add(1)
+		go test(i)
+	}
+	wg.Wait()
+
+	end := time.Now().Unix()
+	fmt.Println(end-start)//8 协程了用了4
+}
+
+
+package main
+
+import (
+
+	"fmt"
+	"sync"
+	"time"
+)
+//开启4个协程时
+// start:(n-1)*30000+1  end:n*30000
+
+var wg sync.WaitGroup
+
+func test(n int){
+	for num:=(n-1)*30000+1;num< n*30000;num++  {
+		if num >1{
+			var flag = true
+			for i:=2;i<num ;i++  {
+				if num%i==0{
+					flag=false
+					break
+				}
+			}
+			if flag{
+
+			}
+		}
+	}
+	wg.Done()
+}
+
+func main(){
+	start := time.Now().Unix()
+	for i:=1;i<=4 ;i++  {
+		wg.Add(1)
+		go test(i)
+	}
+	wg.Wait()
+
+	end := time.Now().Unix()
+	fmt.Println(end-start)//8 协程了用了4
+}
+
+
+多个协程之间的数据交互和数据传递
+
+channel管道
+
+管道是golang语言在语言级别上提供的goroutine间的通讯方式
+
+可以使用channel在多个goroutine之间传递消息
+如果说goroutine是golang程序并发的执行体，
+channel就是它们之间额连接。
+channel是可以让一个goroutine发送特定值到另一个goroutine的通信机制
+
+golang的并发模型CSP（Communicating Sequentail processes）
+提供通过通信共享内存而不是通过共享内存而实现通信
+
+golagn语言中的管道(channel)是一种特殊的类型
+管道像一个传送带或队列，总是遵循先入先出(First in First Out)
+的规则，保证收发数据的顺序。每一个管道都是一个具体类型的导管
+也就是声明channel的时候需要为其指定元素类型
+
+1. channel是一种类型，一种引用类型

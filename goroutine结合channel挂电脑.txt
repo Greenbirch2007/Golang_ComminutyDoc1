@@ -1,0 +1,50 @@
+
+需求1： 定义两个方法，一个方法给管道里面写数据，一个从管道里面读取数据，要求同步进行
+
+1. 开启一个fn1的协程给管道inChan中写入100条数据
+2. 开启一个fn2的协程读取inChan中写入的数据
+3. 注意：fn1和fn2同时操作一个管道
+4. 主线程必须等到操作完成后才能退出
+
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+/*
+要求：使用goroutine和channel协同工作
+
+*/
+
+var wg sync.WaitGroup
+func  fn1(ch chan int){
+	for i:=1;i<=10 ;i++  {
+		ch <- i
+		fmt.Printf("写入数据%v \n",i)
+		time.Sleep(time.Millisecond*50)
+	}
+	//用for range遍历管道时必须关闭管道
+	close(ch)
+	wg.Done()
+}
+func fn2(ch chan int) {
+	for	v := range ch{
+		fmt.Printf("取出数据%v\n",v)
+		time.Sleep(time.Millisecond*50)
+	}
+	wg.Done()
+}
+func main(){
+	var ch =make(chan int,10)
+	wg.Add(1)
+	go fn1(ch)
+	wg.Add(1)
+	go fn2(ch)
+	wg.Wait()
+	fmt.Println("goroutine+chan complete")
+}
+
+

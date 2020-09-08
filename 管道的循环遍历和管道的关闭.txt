@@ -1,0 +1,35 @@
+package main
+
+import "fmt"
+
+/*
+循环遍历管道数据
+
+使用for range遍历管道，当通道被关闭的时候就会退出for range
+如果没有关闭关闭管道就会报错
+*/
+
+func main(){
+	//var ch1 = make(chan int,5)
+	//for i:=0;i<5 ;i++  {
+	//	ch1 <- i
+	//}
+	//close(ch1) //关闭管道
+	//
+	////使用for range遍历通道，
+	////通过for range来遍历管道数据 管道没有key
+	//for val1 := range ch1 {
+	//	fmt.Println(val1)
+	//}
+	//通过for循环遍历管道是可以不关闭管道
+
+	var ch2 = make(chan int,3)
+	for i:=0;i<3 ;i++  {
+		ch2 <- i
+	}
+	for j:=0;j<3 ;j++  {
+		fmt.Println(<-ch2)
+	}
+	}
+
+

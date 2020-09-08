@@ -1,0 +1,90 @@
+
+
+1. channel 类型
+
+var 变量  chan 元素类型
+
+var ch1 chan int //声明一个传递整型的管道
+var ch2 chan bool //声明一个传递布尔类型的管道
+var ch3 chan []int //声明一个传递int切片的管道
+
+
+2. 创建channel
+
+make(chan 元素类型,容量)
+
+
+ch1 := make(chan int,10)
+ch2 := make(chan bool,4)
+ch3 := make(chan []int,3)
+
+
+3. channel操作
+
+管道有发送(send)，接收(receive)和关闭(close)三种操作
+
+发送和接收都是用<-
+
+ch := make(chan int,3)
+
+1. 发送(将数据放入管道内)
+
+将一个值发送到管道中
+
+ch <- 10 //把10发送到ch中
+
+2.接收(从管道内取值)
+
+从一个管道中接收zhi
+x:= <- ch //从ch找那个
+
+
+package main
+
+import "fmt"
+
+/*
+1. 创建channel
+2. 给管道里面存储数据
+3.管道的类型
+4. 管道的容量和长度
+5.管道阻塞
+
+
+*/
+
+func main(){
+	//ch := make(chan int,3)
+	//ch <- 3
+	//ch <- 13
+	//ch <- 253
+	//num := <- ch
+	//fmt.Println(num)
+	//num1 := <- ch
+	//fmt.Println(num1)
+	//num2 := <- ch
+	//fmt.Println(num2)
+	//fmt.Printf("值：%v  容量：：%v  长度%v",ch,cap(ch),len(ch))
+	//
+	//ch1 := make(chan int,4)
+	//ch1 <-34
+	//ch1 <-44
+	//ch1 <-54
+	//ch2 := ch1
+	//ch1 <- 66
+	//fmt.Println(ch2)
+	//
+	//ch6 := make(chan int,1)//fatal error: all goroutines are asleep - deadlock!
+	//ch6 <-1
+	//ch6 <-1
+	//在没有使用协程的情况下，如果我们的管道数据已经全部取出
+	//再取就会报告deaklock
+	ch7 := make(chan string,2)
+	ch7 <-"data1"
+	ch7 <-"data2"
+	m1:= <-ch7
+	m1:= <-ch7
+
+
+
+}
