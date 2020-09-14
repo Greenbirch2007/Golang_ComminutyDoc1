@@ -1,0 +1,150 @@
+单向管道
+select 多路复用
+golang 并发安全和锁
+goroutine recover 解决协程中出现的panic
+
+
+单向管道
+
+将管道作为多个任务函数间传递，很多时候在不同的
+任务函数中使用管道都会对其进行限制
+
+比如限制管道在函数中只能发送或只能接收
+
+
+1.默认情况下，管道是双向的
+
+var chan1 chan int //可读可写
+
+
+2. 声明为只写
+
+var chan2 chan<- int
+
+chan2 = make(chan int,3)
+
+chan2 <-20
+
+//num := <- chan2 //error
+
+fmt.Println("chan2=",chan2)
+
+
+3. 声明为只读
+
+
+var chan3 <-chan int
+
+num2 := <- chan3
+
+//chan3 <- 30 //error
+
+fmt.Println("num2",num2)
+
+package main
+
+//单向管道
+func main(){
+	// 1. 在默认情况下，管道是双向
+	//ch1 := make(chan int,2)
+	//ch1 <- 10
+	//ch1 <- 11
+	//m1 :=<- ch1
+	//m2 := <- ch1
+	//fmt.Println(m1,m2)
+
+	// 2.管道声明为只写
+	ch2 := make(chan<- int,2)
+	ch2<-1
+	ch2<-2
+
+	//3. 管道声明为只读
+	ch3 := make(<-chan,int,2)
+	
+
+
+}
+
+select 多路复用
+
+在某些场景下我们需要同时从多个通道接收数据
+这个时候就可以用到golang中给我提供的select多路复用
+
+通常情况通道在接收数据时，如果没有数据可以接收将会发生阻塞
+
+比如下面代码来实现从多个通道接受数据的时候就会发生阻塞
+
+for{
+	//尝试从ch1 接收值
+	data,or := <-ch1
+	//尝试从ch2接收值
+	data,or := <- ch2
+..
+}
+
+select 关键字可以同时响应多个管道的操作
+
+select 语法类似switch语句
+它有一系列case分支和一个默认的分支。
+每个case会对应一个管道的通信(接收或发送)过程
+select会一直等待，知道某个case的通信操作
+完成时，就会执行case分支对应的语句
+
+select {
+	case ch1:
+	...
+	case data:= <-ch2;
+	...
+	case ch3 <-data;
+	default:
+	}
+
+
+select是结合for循环使用的，每次会随机选择case读取ch的数据
+使用select获取channel里面的数据的时候，不需要关闭channel
+
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+//select多路复用
+//使用select获取channel里面的数据的时候，不需要关闭channel
+func main(){
+	//1定义一个管道10数据int
+
+	intChan := make(chan int,10)
+	for i:=0;i<10 ;i++  {
+		intChan<-i
+	}
+
+	//2 定义一个管道5个数据string
+	stringChan := make(chan string,5)
+	for i:=0;i<5 ;i++  {
+		stringChan<-"hello"+fmt.Sprintf("%d",i)
+	}
+
+	for{
+		select {
+		case v:= <-intChan:
+			fmt.Printf("从intChan读取数据%d\n",v)
+			time.Sleep(time.Millisecond*50)
+		case v:= <- stringChan:
+			fmt.Printf("从stringChan读取数据%v\n",v)
+			time.Sleep(time.Millisecond*50)
+
+		default:
+			fmt.Println("数据获取完毕")
+			return//注意退出
+
+		}
+	}
+
+
+}
+
+
+

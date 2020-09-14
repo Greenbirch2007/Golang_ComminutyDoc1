@@ -1,0 +1,43 @@
+goroutine recover 解决协程中出现的panic
+
+
+开启多个协程时，希望即便一个协程报错，不影响其他协程的正常执行
+
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+// 函数
+
+func sayHello(){
+	for i:=0;i<10 ;i++  {
+		time.Sleep(time.Millisecond*50)
+		fmt.Println("hello world")
+	}
+}
+
+//函数
+func test(){
+	//这里可以使用defer + recover
+	defer func() {
+		//捕获test抛出的panic
+		if err := recover();err !=nil{
+			fmt.Println("test()发送错误",err)
+		}
+	}()
+
+	//定义一个map,但是没有分配存储空间所以会报错
+	var myMap map[int]string
+	myMap[0]="golang" //error
+}
+func main(){
+	go sayHello()
+	go test()
+	//防止主进程退出这里使用time.Sleep演示
+	//也搭建用sync.WaitGroup
+	time.Sleep(time.Second)
+}

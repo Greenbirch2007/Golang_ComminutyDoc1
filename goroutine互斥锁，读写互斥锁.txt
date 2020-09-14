@@ -1,0 +1,147 @@
+goroutine互斥锁，读写互斥锁
+
+
+
+golang并发安全和锁
+
+1.互斥锁
+
+互斥搜索是传统并发编程中对共享资源进行访问控制的主要手段，
+它有标准库sync中的Mutex结构体类型表示
+
+sync.Mutex类型只有两个公开的指针方法，Lock和Unlock
+lock锁定当前的共享资源
+Unlock进行解锁
+
+不同的会竞争资源
+
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+var count =0
+var wg sync.WaitGroup
+var mutex sync.Mutex
+
+
+func test(){
+	mutex.Lock() //首先给资源加锁
+	count++
+	fmt.Println("the count is :",count)
+	time.Sleep(time.Millisecond)
+	mutex.Unlock() //访问后解锁
+	wg.Done()
+}
+
+func main(){
+	for r:=0;r<20 ;r++  {
+		wg.Add(1)
+		go test()
+		wg.Wait()
+	}
+}
+
+
+2. 读写虎出世
+
+互斥锁本质是当一个goroutine访问的时候，其他goroutine
+都不能访问。这样会降低效率
+
+其实对一个不会变化的诗句只做"读"操作的话，
+是不存在资源竞争的问题的，因为数据时不变的
+不管怎么读取，多少goroutine同时读取，都是可以的
+
+所以维度不在"读"上，主要是修改，也就是"写"
+修改的数据要同步，这样其他goroutine才可以感知到
+所以真正的互斥应该是读取和修改
+修改和修改之前，读和读是没有互斥操作的必要的
+
+
+从而衍生了一个读写锁
+
+读写锁可以让多个读操作并发，同时读取但是对于写操作完全是互斥的
+也就是当一个goroutine进行写操作的时候，其他goroutine既不能
+读操作，也不能写操作
+
+golang中的读写锁由结构体sync.RWMutext表示。此类型的方法集中包含两对方法
+
+
+
+一组对写操作的锁定和解锁，简称写锁定和写解锁
+
+func(*RWMutex)Lock()
+func(*RWMutex)Unlock()
+
+
+另一组表示对读操作的锁定和解锁，简称"读锁定"和"读解锁"
+
+
+func(*RWMutex)Rlock()
+func(*RWMutex)RUnlock()
+
+主要用于操作数据库？
+
+想法是写的时候是一个进程去读，读的时候可以是多个进程来写？
+写是串行实行，读是并行执行
+满足不同的需求吧！
+
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+
+var mutex sync.RWMutex
+
+var wg sync.WaitGroup
+
+//写的方法
+
+func write(){
+	mutex.Lock()//写的时候一个人来写
+	fmt.Println("执行写操作")
+	time.Sleep(time.Second*2)
+	mutex.Unlock()
+	wg.Done()
+}
+
+
+//读的方法
+
+func read(){
+	mutex.RLock() //读的时候多个人来读
+	fmt.Println("----执行读操作")
+	time.Sleep(time.Second*2)
+	mutex.RUnlock()
+	wg.Done()
+}
+
+
+func main(){
+
+
+	//开启10个协程执行读操作
+	for i:=0;i<10 ;i++  {
+		wg.Add(1)
+		go write()
+	}
+	//开启10个协程执行写操作
+	for i:=0;i<10 ;i++  {
+		wg.Add(1)
+		go read()
+	}
+
+
+
+
+
+	wg.Wait()
+
+}
