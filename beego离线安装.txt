@@ -1,0 +1,14 @@
+beego离线安装
+
+https://www.cnblogs.com/my-global/articles/13699407.html
+1.安装命令：
+
+go get github.com/astaxie/beego
+go get github.com/beego/bee
+也可以直接下载到本地的github包路径下
+
+2、因为go是博主默认安装 在c盘的 博主 的 go路径是 C:\Go ，来， 打开 C:\Go\src .，然后看我这个路径C:\Go\src\github.com\astaxie\beego 你要在 C:\Go\的src文件下下新建github.com 一个文件夹 在github.com下新建astaxie 在 astaxie 下再新建beego 文件夹 然后把你刚才下下来改名的 beego里面的文件全部复制进去 ， 然后在看我下面这个路径 C:\Go\src\github.com\beego\bee 你要在 github.com下新建一个beego 文件夹 在新建一个bee文件夹 把刚才下下来并改名的 bee里面的文件全部复制进去 ，并且 打开命令符切换到 当前目录下 输入 go build
+最后进入beego/bee目录里输入
+
+go build
+然后把bee.exe剪切到GOPATH/bin目录里就可以了
